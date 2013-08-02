@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual C# Express 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LaserPuzzle", "LaserPuzzleGenerator\LaserPuzzle.csproj", "{66DE3437-710E-4EA3-9B88-9CF9D421448C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GridLock", "GridLock\GridLock.csproj", "{0EFB8586-15BB-4813-8A2B-56F5C828A274}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{8CA8D663-65BA-4A15-8570-6E3794A989DF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{66DE3437-710E-4EA3-9B88-9CF9D421448C}.Debug|x86.ActiveCfg = Debug|x86
+		{66DE3437-710E-4EA3-9B88-9CF9D421448C}.Debug|x86.Build.0 = Debug|x86
+		{66DE3437-710E-4EA3-9B88-9CF9D421448C}.Release|x86.ActiveCfg = Release|x86
+		{66DE3437-710E-4EA3-9B88-9CF9D421448C}.Release|x86.Build.0 = Release|x86
+		{0EFB8586-15BB-4813-8A2B-56F5C828A274}.Debug|x86.ActiveCfg = Debug|x86
+		{0EFB8586-15BB-4813-8A2B-56F5C828A274}.Debug|x86.Build.0 = Debug|x86
+		{0EFB8586-15BB-4813-8A2B-56F5C828A274}.Release|x86.ActiveCfg = Release|x86
+		{0EFB8586-15BB-4813-8A2B-56F5C828A274}.Release|x86.Build.0 = Release|x86
+		{8CA8D663-65BA-4A15-8570-6E3794A989DF}.Debug|x86.ActiveCfg = Debug|x86
+		{8CA8D663-65BA-4A15-8570-6E3794A989DF}.Debug|x86.Build.0 = Debug|x86
+		{8CA8D663-65BA-4A15-8570-6E3794A989DF}.Release|x86.ActiveCfg = Release|x86
+		{8CA8D663-65BA-4A15-8570-6E3794A989DF}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
