@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using System.Threading;
+using ThreadExt;
 
 namespace LaserPuzzle
 {
@@ -32,22 +34,63 @@ namespace LaserPuzzle
         private int[,] NumberGrid;
         private List<KeyValuePair<int, int>> Positions = new List<KeyValuePair<int, int>>();
         private Direction[,] LaserGrid;
+        private Constraints _constraints = Constraints.None;
+        private object _locker = new object();
+
+        private class CreatorArgs
+        {
+            public int id;
+            public Puzzle puz;
+        }
+        
+        private static void CreatorThread(object o)
+        {
+            CreatorArgs args = o as CreatorArgs;
+            if (args == null || args.puz == null || args.id < 0)
+                return;
+
+            ThreadHelper.SetProcessorAffinity(1 << args.id);
+            try
+            {
+                args.puz.Create();
+            }
+            catch (ThreadAbortException)
+            {
+            }
+        }
+
+        private void Create()
+        {
+            int[,] numGrid;
+            Direction[,] lasGrid;
+            List<KeyValuePair<int, int>> locs;
+
+            bool disallowCorners = HasConstraint(_constraints, Constraints.DisallowOutwardCornerLasers);
+            bool disallowEdges = HasConstraint(_constraints, Constraints.DisallowOutwardEdgeLasers);
+
+            Generator gen = new Generator(HEIGHT, WIDTH, NUM_LASERS);
+            do
+            {
+                gen.CreatePuzzle(disallowCorners, disallowEdges, out numGrid, out locs, out lasGrid);
+            } while (!TestSolution(numGrid, lasGrid, locs, _constraints));
+
+            lock (_locker)
+            {
+                if (NumberGrid != null)
+                    return;
+
+                NumberGrid = numGrid;
+                LaserGrid = lasGrid;
+                Positions = locs;
+            }
+        }
 
         public Puzzle(int rows, int cols, int numLasers, Constraints constraints)
         {
             WIDTH = cols;
             HEIGHT = rows;
-            
-            NumberGrid = new int[rows, cols];
-            LaserGrid = new Direction[rows, cols];
-
-            Generator gen = new Generator(rows, cols, numLasers);
-            do
-            {
-                gen.CreatePuzzle(this, out NumberGrid, out Positions, out LaserGrid);
-            } while (!TestSolution(constraints));
-
-            NUM_LASERS = Positions.Count;
+            NUM_LASERS = numLasers;
+            _constraints = constraints;
         }
 
         public Puzzle(int[,] numbers, Direction[,] lasers, List<KeyValuePair<int, int>> laserLocs)
@@ -63,6 +106,39 @@ namespace LaserPuzzle
             Positions.AddRange(laserLocs);
 
             NUM_LASERS = Positions.Count;
+        }
+
+        public void Initialize()
+        {
+            int procCount = Environment.ProcessorCount;
+
+            if (_constraints == Constraints.None || procCount <= 2)
+            {
+                Create();
+            }
+            else
+            {
+                ThreadHelper.SetProcessorAffinity(1);
+                Thread[] threads = new Thread[procCount - 1];
+                for (int i = 0; i < threads.Length; i++)
+                {
+                    threads[i] = new Thread(CreatorThread);
+                    CreatorArgs args = new CreatorArgs();
+                    args.id = i + 1;
+                    args.puz = this;
+                    threads[i].Start(args);
+                }
+
+                while (NumberGrid == null)
+                    Thread.Sleep(2000);
+
+                foreach (Thread t in threads)
+                    if (t.IsAlive)
+                        t.Abort();
+
+                Int32 mask = (1 << procCount) - 1;
+                ThreadHelper.SetProcessorAffinity(mask);
+            }
         }
 
         private int WIDTH;
@@ -87,9 +163,17 @@ namespace LaserPuzzle
         {
             return (value & target) == target;
         }
-        
-        public bool TestSolution(Constraints constraints)
+
+        public bool TestSolution()
         {
+            return TestSolution(NumberGrid, LaserGrid, Positions, _constraints);
+        }
+        
+        private static bool TestSolution(int[,] NumberGrid, Direction[,] LaserGrid, List<KeyValuePair<int,int>> Positions, Constraints constraints)
+        {
+            int HEIGHT = NumberGrid.GetLength(0);
+            int WIDTH = NumberGrid.GetLength(1);
+
             if (HasConstraint(constraints, Constraints.DisallowParallelLaserBlocks))
             {
                 #region Ensure row-wise laser blocks do not have both East and West (redundancy)

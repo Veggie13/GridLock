@@ -197,6 +197,7 @@ namespace LaserGame
                 Puzzle.Constraints constraints = args.constraints;
 
                 puz = new Puzzle(rows, cols, lasers, constraints);
+                puz.Initialize();
 
                 lock (_locker)
                 {

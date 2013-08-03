@@ -38,12 +38,61 @@ namespace LaserPuzzle
             }
         }
 
-        private void ChooseDirections(Direction[] Directions)
+        private void ChooseDirections(List<KeyValuePair<int, int>> Positions, bool disallowOutwardCorners, bool disallowOutwardEdges, Direction[] Directions)
         {
             Random rand = new Random();
             for (int n = 0; n < NUM_LASERS; n++)
             {
-                Directions[n] = CHOICES[(int)(rand.NextDouble() * 4)];
+            theStart:
+                Directions[n] = CHOICES[(int)(rand.NextDouble() * 4) % 4];
+                if (disallowOutwardCorners)
+                {
+                    if (Positions[n].Value == 0)
+                    {
+                        if (Positions[n].Key == 0 &&
+                            (Directions[n] == Direction.North ||
+                             Directions[n] == Direction.West))
+                            goto theStart;
+                        else if (Positions[n].Key == HEIGHT - 1 &&
+                            (Directions[n] == Direction.South ||
+                             Directions[n] == Direction.West))
+                            goto theStart;
+                    }
+                    else if (Positions[n].Value == WIDTH - 1)
+                    {
+                        if (Positions[n].Key == 0 &&
+                            (Directions[n] == Direction.North ||
+                             Directions[n] == Direction.East))
+                            goto theStart;
+                        else if (Positions[n].Key == HEIGHT - 1 &&
+                            (Directions[n] == Direction.South ||
+                             Directions[n] == Direction.East))
+                            goto theStart;
+                    }
+                }
+                if (disallowOutwardEdges)
+                {
+                    if (Positions[n].Key == 0 &&
+                        Positions[n].Value != 0 &&
+                        Positions[n].Value != WIDTH - 1 &&
+                        Directions[n] == Direction.North)
+                        goto theStart;
+                    if (Positions[n].Key == HEIGHT - 1 &&
+                        Positions[n].Value != 0 &&
+                        Positions[n].Value != WIDTH - 1 &&
+                        Directions[n] == Direction.South)
+                        goto theStart;
+                    if (Positions[n].Value == 0 &&
+                        Positions[n].Key != 0 &&
+                        Positions[n].Key != HEIGHT - 1 &&
+                        Directions[n] == Direction.West)
+                        goto theStart;
+                    if (Positions[n].Value == WIDTH - 1 &&
+                        Positions[n].Key!= 0 &&
+                        Positions[n].Key != HEIGHT - 1 &&
+                        Directions[n] == Direction.East)
+                        goto theStart;
+                }
             }
         }
         
@@ -88,7 +137,7 @@ namespace LaserPuzzle
             }
         }
 
-        public void CreatePuzzle(Puzzle puz, out int[,] NumberGrid, out List<KeyValuePair<int,int>> Positions, out Direction[,] LaserGrid)
+        public void CreatePuzzle(bool disallowOutwardCorners, bool disallowOutwardEdges, out int[,] NumberGrid, out List<KeyValuePair<int,int>> Positions, out Direction[,] LaserGrid)
         {
             LaserGrid = new Direction[HEIGHT, WIDTH];
             NumberGrid = new int[HEIGHT, WIDTH];
@@ -97,11 +146,11 @@ namespace LaserPuzzle
 
             Array.Clear(NumberGrid, 0, NumberGrid.Length);
 
-            Direction[] Solution = new Direction[NUM_LASERS];
-            ChooseDirections(Solution);
-
             Positions = new List<KeyValuePair<int, int>>();
             ChoosePositions(Positions);
+
+            Direction[] Solution = new Direction[NUM_LASERS];
+            ChooseDirections(Positions, disallowOutwardCorners, disallowOutwardEdges, Solution);
 
             GeneratePuzzle(LaserGrid, NumberGrid, Positions, Solution);
         }
